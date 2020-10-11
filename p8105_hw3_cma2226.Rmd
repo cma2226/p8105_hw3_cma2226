@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-Now I will load by data
+Now I will load my data.
 
 ```{r load}
 data("instacart")
@@ -83,7 +83,6 @@ instacart %>%
 ```
 
 
-
 ## Problem 2
 
 I will begin by loading, cleaning and tidying in the required dataset for this problem. This problem uses five weeks of accelerometer data collected on a 63 year-old male with BMI 25, who was admitted to the Advanced Cardiac Care Center of Columbia University Medical Center and diagnosed with congestive heart failure (CHF). 
@@ -101,22 +100,29 @@ accel_data = read_csv("./accel_data.csv") %>%
   #create day_type variable with weekday and weekend entries
   mutate(day_type = ifelse(day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), "Weekday", "Weekend")) %>%
   #change variable types as appropriate
-  mutate(minute = as.numeric(minute),
-         day_id = as.character(day_id))
+  mutate(minute = as.numeric(minute)) %>%
+  #reorder variables
+  select(day_id, day, week, day_type, minute, activity)
+
+##Consider reordering variables
 ```
 
-Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, I will aggregate across minutes to create a total activity variable for each day, and create a table showing these totals. 
+The generated plot contains `r nrow(accel_data)` rows and `r ncol(accel_data)` columns. The columns include a day identifier, day of the week, week number, day type (weekday vs weekend), minute, and activity level. 
+
+Traditional analyses of accelerometer data focus on the total activity over the day. I will now aggregate across minutes to create a total activity variable for each day, and create a table showing these totals. 
 
 ```{r group_by}
 #create a summary dataset containing activity totals for each day and week
 summ.accel = accel_data %>%
   group_by(day, week) %>%
   summarise(total = sum(activity))
+```
 
-#we can investigate trends associated with activity level and day of the week by grouping by day of the week and summarizing
+We can investigate trends associated with activity level and day of the week by grouping by day of the week and summarizing
+```{r summarizing}
 summ.day = summ.accel %>%
   group_by(day) %>%
-  summarise(totl = sum(total))
+  summarise(total = sum(total))
 
 #we can investigate trends associated with activity level and week by grouping by week and summarizing
 summ.week = summ.accel %>%
@@ -130,15 +136,24 @@ We can further visualize these results by generating a single-panel plot that sh
 
 ```{r ggplot}
 plot = accel_data %>%
-  group_by(day_id) %>%
+  mutate(day = as.factor(day)) %>%
+  mutate(day = factor(day, levels = str_c(c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")))) %>%
   ggplot(aes(x = minute, y = activity, color = day)) + 
-  geom_point()
+  geom_line() +
+  labs(
+    title = "Activity over the course of the day",
+      x = "Minute",
+      y = "Activity",
+      caption = "This graph depicts activity over the course of the day for 35 consecutive days of medical monitoring using an accelerometer. Line color is determined by day of the week."
+  ) +
+  guides(color = guide_legend("Day"))
 
 plot
 ```
 
+Based on the above graph, we can make several observations. Firstly, on all days of the week, activity is low during the first ~300 minutes of the day. Similarly, activity declines on all days of the week during the last ~150 minutes of the day. This suggests that the patient is sleeping during this timeframe. On Fridays,the patient sustains activity longer into the night than on other weekdays. 
 
-Describe in words any patterns or conclusions you can make based on this graph (ie. less activity during nighttime, it does look like weekends are less active than week days, etc.)
+On some days, the patient appears to be more active at different time points. For example, the patient's peak activity occurs on Tuesdays around minute 1150. 
 
 
 ## Problem 3
@@ -149,14 +164,14 @@ The National Oceanic and Atmospheric Association (NOAA) of the National Centers 
 
 The ny_noaa dataset contains 2,595,176 observations and 7 columns. Noteworthy variables in the ny_noaa dataset include: weather station ID, date, maximum temperature (tenths of degrees C), minimum temperature (tenths of degrees C), precipitation (tenths of mm), snowfall (mm), and snow depth (mm). Each weather station may collect only a subset of these variables, and therefore the resulting dataset contains extensive missing data. 5.6% of the data are missing for the precipitation field; 14.7% of the data are missing for the snow fall field; 27.8% of the data are complete for the snow depth field; 43.7% of the data are complete for the temperature minimum and maximum fields. 
 
-
-I will begin by cleaning variable names; separating the date variable into three variables denoting year, month, and day; changing variable classes as necessary; and revaluing variable entries such that temperature units are in degrees C, precipitation units are in mm, and snowfall units are in cm.    
+I will begin by cleaning variable names; separating the date variable into three variables denoting year, month, and day; changing variable classes as necessary; and revaluing variable entries such that temperature units are in degrees C and precipitation units are in mm; snowfall units are kept in mm.   
 
 ```{r noaa}
 library(p8105.datasets)
 data("ny_noaa")
 
-ny_noaa %>%
+ny_noaa = 
+  ny_noaa %>%
   janitor::clean_names() %>%
   separate(date, c("year", "month", "day")) %>%
   mutate(tmax = as.numeric(tmax),
@@ -166,55 +181,69 @@ ny_noaa %>%
          day = as.numeric(day)) %>%
   mutate(tmax = (tmax)/10,
          tmin = (tmin)/10,
-         snow = (snow)/10,
-         snwd = (snwd)/10,
-         prcp = (prcp)/10) %>%
-  skimr::skim()
+         prcp = (prcp)/100)
+  skimr::skim(ny_noaa)
 ```
 
 For snowfall, what are the most commonly observed values? Why?
 
 ```{r count}
 ny_noaa %>%
+  group_by(snow) %>%
   count(snow, name = "n_obs") %>%
   arrange(desc(n_obs))
 ```
 
-Aside from 0 cm, the most commonly reported snowfall amount is 25 cm. 
+0 mm is the most commonly observed snowfall value. Aside from this, the most commonly reported snowfall amount is 25 mm. 
 
 Next I will make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
 
 ```{r ggplot_2}
-ny_noaa %>%
-  janitor::clean_names() %>%
-  separate(date, c("year", "month", "day")) %>%
-  mutate(tmax = as.numeric(tmax),
-         tmin = as.numeric(tmin),
-         year = as.numeric(year),
-         month = as.numeric(month),
-         day = as.numeric(day)) %>%
-  mutate(tmax = (tmax)/10,
-         tmin = (tmin)/10,
-         snow = (snow)/10,
-         snwd = (snwd)/10,
-         prcp = (prcp)/10) %>%
-  filter(month %in% c("1","7")) %>%
-  group_by(year, id, month) %>%
+data = filter(ny_noaa, month %in% c("1","7")) %>%
+  group_by(year, month, id) %>%
   summarise(mean_tmax = mean(tmax, na.rm = TRUE))
 
-%>%
-  ggplot(aes(x = year, y = mean_tmax)) +
-  geom_point(alpha = .5) + 
-  facet_grid(~month)
+ggplot(data = data, aes(x = year, y = mean_tmax, color = id)) +
+  geom_line() +
+  facet_grid(~ month) + 
+  labs(
+    title = "Average max temperatures in January and July",
+    x = "Year",
+    y = "Maximum temperature in degrees C") +
+  theme(legend.position = "none") +
+  theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 1))
+  
 ```
 
+Both graphs have a zig-zag pattern denoting that the average temperature maximum fluctuates between years. Between 1980 and 2010, there appears to be a slight increase in average temperature maximums overtime. The average temperatures in July are more consistent overtime, and have less fluctuation between temperature maximums over the observed years. In the July temperature graph, one weather station appears to have reported an abnormally low high value (< 10 degrees Celsius) during the late 1980s. 
 
-
-Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by ye
+Next I will make a two-panel plot showing (i) tmax vs tmin for the full dataset; and (ii) the distribution of snowfall values greater than 0 and less than 100 separately by year. 
 
 ```{r ggplot_3}
-library(patchwork)
+hex = ggplot(ny_noaa, aes(x = tmax, y = tmin)) + 
+  geom_hex() + 
+  labs(
+    title = "Density of Reported Temperature Max and Mins",
+    x = "Maximum daily temperature (C)",
+    y = "Minimum daily temperature (C)")
 
+snowfall_plot <- ny_noaa %>%
+  filter((snow > 0) & (snow < 100)) %>%
+  ggplot(aes(x = as.character(year), y = (snow))) +
+  geom_boxplot() + 
+  labs(
+    title = "Distribution of Snowfall Values by Year ",
+    x = "Year",
+    y = "Snowfall (mm)",
+    caption = "This graph shows the distribution of snowfall values by year, where each box plot corresponds to a given year. Graphed snowfall events are restricted to being greater than 0 and less than 100.") +
+  theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 1))
+snowfall_plot
 
+library(patchwork)               
+hex / snowfall_plot
 
+```
 
+The above graphs show several trends with regard to reported temperature maximums and minimums overtime, and the distribution of reported snowfall overtime. The density of reported temperature maximums and minimums plot shows the frequency with which stations have reported given pairs of temperature lows and highs in a given day. The most frequently reported pairs of temperature highs and lows are: i) high temperature of 5 degrees Celsius and low temperature of 0 degrees Celsius, and ii) high temperature of 25 degrees Celsius and low temperature of 15 degrees Celsius. In addition, the diagonal shape of the hex plot suggests that as daily temperature highs increase, temperature lows also increase. 
+
+The snowfall graph shows boxplots of snowfall distrubution by year. Overall, the reported snowfall is fairly consistent overtime, as is revealed through the relatively constant median, and IQRs across boxplots. While the medians have remained consistent overtime at approximately 25 millimeters, the 75th percentile of snowfall was notably less during the years 1998, 2006, and 2010. Several outliers are visible on the high end of snowfall distribution during these same years. 
