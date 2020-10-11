@@ -2,7 +2,7 @@
 title: "Data Science Homework 3"
 author: "Caroline Andy"
 date: "10/10/2020"
-output: html_document
+output: github_document
 ---
 
 ## Problem 1
@@ -107,7 +107,7 @@ accel_data = read_csv("./accel_data.csv") %>%
 ##Consider reordering variables
 ```
 
-The generated plot contains `r nrow(accel_data)` rows and `r ncol(accel_data)` columns. The columns include a day identifier, day of the week, week number, day type (weekday vs weekend), minute, and activity level. 
+The generated plot contains `r nrow(accel_data)` rows and `r ncol(accel_data)` columns. After cleaning the data, remaining columns include a day identifier, day of the week, week number, day type (weekday vs weekend), minute, and activity level. 
 
 Traditional analyses of accelerometer data focus on the total activity over the day. I will now aggregate across minutes to create a total activity variable for each day, and create a table showing these totals. 
 
@@ -118,13 +118,17 @@ summ.accel = accel_data %>%
   summarise(total = sum(activity))
 ```
 
-We can investigate trends associated with activity level and day of the week by grouping by day of the week and summarizing
+We can investigate trends associated with activity level and day of the week by grouping by day of the week and summarizing. 
+
 ```{r summarizing}
 summ.day = summ.accel %>%
   group_by(day) %>%
   summarise(total = sum(total))
+```
 
-#we can investigate trends associated with activity level and week by grouping by week and summarizing
+We can investigate trends associated with activity level and week by grouping by week and summarizing
+
+```{r summarizing_2}
 summ.week = summ.accel %>%
   group_by(week) %>%
   summarise(total = sum(total))
@@ -151,9 +155,9 @@ plot = accel_data %>%
 plot
 ```
 
-Based on the above graph, we can make several observations. Firstly, on all days of the week, activity is low during the first ~300 minutes of the day. Similarly, activity declines on all days of the week during the last ~150 minutes of the day. This suggests that the patient is sleeping during this timeframe. On Fridays,the patient sustains activity longer into the night than on other weekdays. 
+Based on the above graph, we can make several observations. Firstly, on all days of the week, activity is low during the first ~300 minutes of the day. Similarly, activity declines on all days of the week during the last ~150 minutes of the day. This suggests that the patient is likely sleeping during this timeframe. On Fridays,the patient sustains activity longer into the night than on other weekdays. 
 
-On some days, the patient appears to be more active at different time points. For example, the patient's peak activity occurs on Tuesdays around minute 1150. 
+On some days, the patient appears to be more active at different time points. For example, the patient's peak activity occurs on Tuesdays around minute 1150, and on Sundays around minute 850. 
 
 
 ## Problem 3
@@ -164,7 +168,7 @@ The National Oceanic and Atmospheric Association (NOAA) of the National Centers 
 
 The ny_noaa dataset contains 2,595,176 observations and 7 columns. Noteworthy variables in the ny_noaa dataset include: weather station ID, date, maximum temperature (tenths of degrees C), minimum temperature (tenths of degrees C), precipitation (tenths of mm), snowfall (mm), and snow depth (mm). Each weather station may collect only a subset of these variables, and therefore the resulting dataset contains extensive missing data. 5.6% of the data are missing for the precipitation field; 14.7% of the data are missing for the snow fall field; 27.8% of the data are complete for the snow depth field; 43.7% of the data are complete for the temperature minimum and maximum fields. 
 
-I will begin by cleaning variable names; separating the date variable into three variables denoting year, month, and day; changing variable classes as necessary; and revaluing variable entries such that temperature units are in degrees C and precipitation units are in mm; snowfall units are kept in mm.   
+I will begin by cleaning variable names; separating the date variable into three variables denoting year, month, and day; changing variable classes as necessary; and revaluing variable entries such that temperature units are in degrees C and precipitation units are in mm. Snowfall units are kept in mm.   
 
 ```{r noaa}
 library(p8105.datasets)
@@ -182,7 +186,6 @@ ny_noaa =
   mutate(tmax = (tmax)/10,
          tmin = (tmin)/10,
          prcp = (prcp)/100)
-  skimr::skim(ny_noaa)
 ```
 
 For snowfall, what are the most commonly observed values? Why?
@@ -194,7 +197,7 @@ ny_noaa %>%
   arrange(desc(n_obs))
 ```
 
-0 mm is the most commonly observed snowfall value. Aside from this, the most commonly reported snowfall amount is 25 mm. 
+0 mm is the most commonly observed snowfall value. The most commonly reported snowfall amount greater than 0 is 25 mm. 
 
 Next I will make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
 
@@ -215,11 +218,14 @@ ggplot(data = data, aes(x = year, y = mean_tmax, color = id)) +
   
 ```
 
-Both graphs have a zig-zag pattern denoting that the average temperature maximum fluctuates between years. Between 1980 and 2010, there appears to be a slight increase in average temperature maximums overtime. The average temperatures in July are more consistent overtime, and have less fluctuation between temperature maximums over the observed years. In the July temperature graph, one weather station appears to have reported an abnormally low high value (< 10 degrees Celsius) during the late 1980s. 
+Both graphs have a zig-zag pattern denoting that the average temperature maximum fluctuates between years. Between 1980 and 2010, there appears to be a slight increase in average temperature maximums overtime. The average temperatures in July are more consistent overtime, and have less fluctuation between temperature maximums over the observed years. In the July temperature graph, one weather station appears to have reported an abnormally low high value (< 10 degrees Celsius) during the late 1980s. In the January temperature graph, one weather station appears to have reported an abnormally low high value (-13 degrees Celsius). 
+
+As one would expect, the temperature highs in July are significantly higher than the temperature highs in January. 
 
 Next I will make a two-panel plot showing (i) tmax vs tmin for the full dataset; and (ii) the distribution of snowfall values greater than 0 and less than 100 separately by year. 
 
 ```{r ggplot_3}
+##generating first plot
 hex = ggplot(ny_noaa, aes(x = tmax, y = tmin)) + 
   geom_hex() + 
   labs(
@@ -227,6 +233,7 @@ hex = ggplot(ny_noaa, aes(x = tmax, y = tmin)) +
     x = "Maximum daily temperature (C)",
     y = "Minimum daily temperature (C)")
 
+##generating second plot
 snowfall_plot <- ny_noaa %>%
   filter((snow > 0) & (snow < 100)) %>%
   ggplot(aes(x = as.character(year), y = (snow))) +
@@ -239,6 +246,7 @@ snowfall_plot <- ny_noaa %>%
   theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 1))
 snowfall_plot
 
+##creating a two-panel plot using patchwork 
 library(patchwork)               
 hex / snowfall_plot
 
