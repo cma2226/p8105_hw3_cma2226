@@ -9,7 +9,7 @@ output: github_document
 
 First I will load my required packages, including p8105.datasets, which we will use for this problem. I will also set my figure preferences in global options. 
 
-```{r setup}
+```{r setup, warning = FALSE, message = FALSE}
 library(tidyverse)
 library(p8105.datasets)
 
@@ -22,17 +22,17 @@ knitr::opts_chunk$set(
 
 Now I will load my data.
 
-```{r load}
+```{r load, warning = FALSE, message = FALSE}
 data("instacart")
 ```
 
-Instacart is an online grocery service. Data description is included in linked webpage about Instacart. {Data dictionary is available.}
+Instacart is an online grocery service. In New York City, partner stores include Whole Foods, Fairway, and The Food Emporium. The Instacart Online Grocery Shopping Dataset 2017, used in this question, is an anonymized dataset with over 3 million online grocery orders from more than 200,000 Instacart users. 
 
-This dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns. Observations are at the level of items in orders by users. There are user/order variables -- user ID, order number, order ID, order day, and order hour. There are also item variables -- name, aisle, department, and some numeric codes. {add another sentence or two}. Things to convey have to do with structure. 
+This dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns. Observations are at the level of items in orders by users. There are user/order variables -- user ID, order number, order ID, order day, and order hour. There are also item variables -- name, aisle, department, and some numeric codes. 
 
 How many aisles, and which are most items from? 
 
-```{r counting}
+```{r counting, warning = FALSE, message = FALSE}
 instacart %>%
   count(aisle) %>%
   arrange(desc(n))
@@ -40,7 +40,7 @@ instacart %>%
 
 Make a plot showing the number of items ordered in each isle. Only include aisles with +10,000 items purchased. 
 
-```{r plot}
+```{r plot, warning = FALSE, message = FALSE}
 instacart %>%
   count(aisle) %>%
   filter(n > 10000) %>%
@@ -50,7 +50,13 @@ instacart %>%
   ) %>%
   ggplot(aes(x = aisle, y = n)) +
   geom_point() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  labs(
+    title = "Frequency of Items Ordered From Each Aisle",
+    x = "Aisle",
+    y = "Number of Purchased Items"
+  )
+  
 ```
 
 Make a table containing three most population items in each of the aisles "baking ingredients," "dog food care," and "packaged vegetable fruits." Include the number of times each item is ordered in your table. 
@@ -87,7 +93,7 @@ instacart %>%
 
 I will begin by loading, cleaning and tidying in the required dataset for this problem. This problem uses five weeks of accelerometer data collected on a 63 year-old male with BMI 25, who was admitted to the Advanced Cardiac Care Center of Columbia University Medical Center and diagnosed with congestive heart failure (CHF). 
 
-```{r load_accel}
+```{r load_accel, warning = FALSE, message = FALSE}
 accel_data = read_csv("./accel_data.csv") %>%
   #clean variable names
   janitor::clean_names() %>%
@@ -103,42 +109,44 @@ accel_data = read_csv("./accel_data.csv") %>%
   mutate(minute = as.numeric(minute)) %>%
   #reorder variables
   select(day_id, day, week, day_type, minute, activity)
-
-##Consider reordering variables
+skimr::skim(accel_data)
 ```
 
-The generated plot contains `r nrow(accel_data)` rows and `r ncol(accel_data)` columns. After cleaning the data, remaining columns include a day identifier, day of the week, week number, day type (weekday vs weekend), minute, and activity level. 
+The generated plot contains `r nrow(accel_data)` rows and `r ncol(accel_data)` columns. After cleaning the data, remaining columns include a day identifier, day of the week, week number, day type (weekday vs weekend), minute, and activity level. The "skimr::skim()" code above allows us to assess variable types and summary statistics for each. For the activity variable, the mean activity level is 267 units. The maximum activity level reported at any given minute is 8982 units. 
 
 Traditional analyses of accelerometer data focus on the total activity over the day. I will now aggregate across minutes to create a total activity variable for each day, and create a table showing these totals. 
 
-```{r group_by}
+```{r group_by, warning = FALSE, message = FALSE}
 #create a summary dataset containing activity totals for each day and week
 summ.accel = accel_data %>%
   group_by(day, week) %>%
   summarise(total = sum(activity))
+summ.accel
 ```
 
 We can investigate trends associated with activity level and day of the week by grouping by day of the week and summarizing. 
 
-```{r summarizing}
+```{r summarizing, warning = FALSE, message = FALSE}
 summ.day = summ.accel %>%
   group_by(day) %>%
-  summarise(total = sum(total))
+  summarise(total = sum(total)) 
+knitr::kable(summ.day)
 ```
 
-We can investigate trends associated with activity level and week by grouping by week and summarizing
+We can investigate trends associated with activity level and week by grouping by week and summarizing. 
 
-```{r summarizing_2}
+```{r summarizing_2, warning = FALSE, message = FALSE}
 summ.week = summ.accel %>%
   group_by(week) %>%
   summarise(total = sum(total))
+knitr::kable(summ.week)
 ```
 
 Immediately, we can see that activity levels tend to be highest on Fridays and Wednesdays, and lowest on Saturdays and Tuesdays. We can also see that activity levels were the highest in week 2 and the lowest in week 4. 
 
 We can further visualize these results by generating a single-panel plot that shows the 24-hr activity time courses for each day. I will do so below, using color to indicate day of the week. 
 
-```{r ggplot}
+```{r ggplot, warning = FALSE, message = FALSE}
 plot = accel_data %>%
   mutate(day = as.factor(day)) %>%
   mutate(day = factor(day, levels = str_c(c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")))) %>%
@@ -148,8 +156,7 @@ plot = accel_data %>%
     title = "Activity over the course of the day",
       x = "Minute",
       y = "Activity",
-      caption = "This graph depicts activity over the course of the day for 35 consecutive days of medical monitoring using an accelerometer. Line color is determined by day of the week."
-  ) +
+      caption = "This graph depicts a patient's daily activity over 35 consecutive days") +
   guides(color = guide_legend("Day"))
 
 plot
@@ -170,7 +177,7 @@ The ny_noaa dataset contains 2,595,176 observations and 7 columns. Noteworthy va
 
 I will begin by cleaning variable names; separating the date variable into three variables denoting year, month, and day; changing variable classes as necessary; and revaluing variable entries such that temperature units are in degrees C and precipitation units are in mm. Snowfall units are kept in mm.   
 
-```{r noaa}
+```{r noaa, warning = FALSE, message = FALSE}
 library(p8105.datasets)
 data("ny_noaa")
 
@@ -190,7 +197,7 @@ ny_noaa =
 
 For snowfall, what are the most commonly observed values? Why?
 
-```{r count}
+```{r count, warning = FALSE, message = FALSE}
 ny_noaa %>%
   group_by(snow) %>%
   count(snow, name = "n_obs") %>%
@@ -199,9 +206,9 @@ ny_noaa %>%
 
 0 mm is the most commonly observed snowfall value. The most commonly reported snowfall amount greater than 0 is 25 mm. 
 
-Next I will make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
+Next I will make a two-panel plot showing the average max temperature in January and in July in each station across years.
 
-```{r ggplot_2}
+```{r ggplot_2, warning = FALSE, message = FALSE}
 data = filter(ny_noaa, month %in% c("1","7")) %>%
   group_by(year, month, id) %>%
   summarise(mean_tmax = mean(tmax, na.rm = TRUE))
@@ -224,14 +231,14 @@ As one would expect, the temperature highs in July are significantly higher than
 
 Next I will make a two-panel plot showing (i) tmax vs tmin for the full dataset; and (ii) the distribution of snowfall values greater than 0 and less than 100 separately by year. 
 
-```{r ggplot_3}
+```{r ggplot_3, warning = FALSE, message = FALSE}
 ##generating first plot
 hex = ggplot(ny_noaa, aes(x = tmax, y = tmin)) + 
   geom_hex() + 
   labs(
     title = "Density of Reported Temperature Max and Mins",
-    x = "Maximum daily temperature (C)",
-    y = "Minimum daily temperature (C)")
+    x = "Max daily temp (C)",
+    y = "Min daily temp (C)")
 
 ##generating second plot
 snowfall_plot <- ny_noaa %>%
@@ -241,10 +248,8 @@ snowfall_plot <- ny_noaa %>%
   labs(
     title = "Distribution of Snowfall Values by Year ",
     x = "Year",
-    y = "Snowfall (mm)",
-    caption = "This graph shows the distribution of snowfall values by year, where each box plot corresponds to a given year. Graphed snowfall events are restricted to being greater than 0 and less than 100.") +
+    y = "Snowfall (mm)")
   theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 1))
-snowfall_plot
 
 ##creating a two-panel plot using patchwork 
 library(patchwork)               
