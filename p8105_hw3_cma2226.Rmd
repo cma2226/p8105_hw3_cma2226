@@ -204,7 +204,7 @@ ny_noaa %>%
   arrange(desc(n_obs))
 ```
 
-0 mm is the most commonly observed snowfall value. The most commonly reported snowfall amount greater than 0 is 25 mm. 
+0 mm is the most commonly observed snowfall value. The most commonly reported snowfall amount greater than 0 is 25 mm. This is consistent with what we would expect, since most areas are not experiencing snowfall more than they are experiencing snowfall. When snowfall does occur, the average snowfall amount is faily low. 
 
 Next I will make a two-panel plot showing the average max temperature in January and in July in each station across years.
 
@@ -225,7 +225,7 @@ ggplot(data = data, aes(x = year, y = mean_tmax, color = id)) +
   
 ```
 
-Both graphs have a zig-zag pattern denoting that the average temperature maximum fluctuates between years. Between 1980 and 2010, there appears to be a slight increase in average temperature maximums overtime. The average temperatures in July are more consistent overtime, and have less fluctuation between temperature maximums over the observed years. In the July temperature graph, one weather station appears to have reported an abnormally low high value (< 10 degrees Celsius) during the late 1980s. In the January temperature graph, one weather station appears to have reported an abnormally low high value (-13 degrees Celsius). 
+Both graphs have a zig-zag pattern denoting that the average temperature maximum fluctuates between years. Between 1980 and 2010, there appears to be a slight increase in average January temperature maximum overtime. The average temperatures in July are more consistent overtime, and have less fluctuation between temperature maximums over the observed years. In the July temperature graph, one weather station appears to have reported an abnormally low high value (< 10 degrees Celsius) during the late 1980s. In the January temperature graph, one weather station appears to have reported an abnormally low high value (-13 degrees Celsius). 
 
 As one would expect, the temperature highs in July are significantly higher than the temperature highs in January. 
 
@@ -257,6 +257,6 @@ hex / snowfall_plot
 
 ```
 
-The above graphs show several trends with regard to reported temperature maximums and minimums overtime, and the distribution of reported snowfall overtime. The density of reported temperature maximums and minimums plot shows the frequency with which stations have reported given pairs of temperature lows and highs in a given day. The most frequently reported pairs of temperature highs and lows are: i) high temperature of 5 degrees Celsius and low temperature of 0 degrees Celsius, and ii) high temperature of 25 degrees Celsius and low temperature of 15 degrees Celsius. In addition, the diagonal shape of the hex plot suggests that as daily temperature highs increase, temperature lows also increase. 
+The above graphs show several trends with regard to reported temperature maximums and minimums overtime, and the distribution of reported snowfall overtime. The density of reported temperature maximums and minimums plot shows the frequency with which stations have reported given pairs of temperature lows and highs. The most frequently reported pairs of temperature highs and lows are: i) high temperature of 5 degrees Celsius and low temperature of 0 degrees Celsius, and ii) high temperature of 25 degrees Celsius and low temperature of 15 degrees Celsius. In addition, the diagonal shape of the hex plot suggests that as daily temperature highs increase, temperature lows also increase. 
 
-The snowfall graph shows boxplots of snowfall distrubution by year. Overall, the reported snowfall is fairly consistent overtime, as is revealed through the relatively constant median, and IQRs across boxplots. While the medians have remained consistent overtime at approximately 25 millimeters, the 75th percentile of snowfall was notably less during the years 1998, 2006, and 2010. Several outliers are visible on the high end of snowfall distribution during these same years. 
+The snowfall graph shows boxplots of snowfall distrubution by year. Overall, the reported snowfall is fairly consistent overtime, as is revealed through the relatively constant median, and IQRs across boxplots. While the medians have remained consistent overtime at approximately 25 millimeters, the 75th percentile of snowfall was notably dipped during the years 1998, 2006, and 2010. Several outliers are visible on the high end of snowfall distribution during these same years. 
